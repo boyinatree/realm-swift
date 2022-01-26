@@ -20,6 +20,7 @@ x.y.z Release notes (yyyy-MM-dd)
     [realm cancelAsyncTransaction:asyncTransactionId];
 ```
 * Replace Xcode 13.3 binaries with 13.3.1 binaries.
+* Add Combine API support for flexible sync beta.
 
 ### Fixed
 * Consuming a RealmSwift XCFramework with library evolution enabled would give the error 
