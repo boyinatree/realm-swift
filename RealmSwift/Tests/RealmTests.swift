@@ -1040,4 +1040,27 @@ class RealmTests: TestCase {
             XCTFail("Got an error: \(error)")
         }
     }
+
+    func testSectioned() {
+        let sectionedResults = try! Realm().objects(SwiftObject.self).sectioned(by: \.stringCol)
+
+        for section in sectionedResults {
+            print(section.key)
+            for obj in section {
+                print(obj)
+            }
+        }
+
+        let token = sectionedResults.observe { (changes: RealmCollectionChange) in
+            switch changes {
+            case .initial(let collection):
+                break
+            case .update:
+                break
+            case .error:
+                break
+            }
+        }
+    }
+
 }

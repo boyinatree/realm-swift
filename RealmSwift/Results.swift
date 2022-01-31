@@ -174,6 +174,37 @@ extension Projection: KeypathSortable {}
 
     public static func == (lhs: Results<Element>, rhs: Results<Element>) -> Bool {
         lhs.collection.isEqual(rhs.collection)
+    public func sectioned<Key: _Persistable>(by: KeyPath<Element, Key>) -> Results<Section<Element, Key>> where Element: Object {
+        fatalError()
+    }
+
+    public struct Section<Element: Object, Key: _Persistable>: RealmCollectionValue {
+
+        // Section Key
+
+        var key: Key
+
+
+
+        public static func == (lhs: Section<Element, Key>, rhs: Section<Element, Key>) -> Bool {
+            fatalError()
+        }
+
+        public static func _rlmDefaultValue() -> Section<Element, Key> {
+            fatalError()
+        }
+
+        public typealias PersistedType = Element
+
+        public static func _rlmFromObjc(_ value: Any, insideOptional: Bool) -> Section<Element, Key>? {
+            fatalError()
+        }
+
+        public var _rlmObjcValue: Any
+
+        public var hashValue: Int = 0
+
+        public func hash(into hasher: inout Hasher) { }
     }
 }
 
