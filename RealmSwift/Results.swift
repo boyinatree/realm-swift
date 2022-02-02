@@ -174,38 +174,70 @@ extension Projection: KeypathSortable {}
 
     public static func == (lhs: Results<Element>, rhs: Results<Element>) -> Bool {
         lhs.collection.isEqual(rhs.collection)
+    }
     public func sectioned<Key: _Persistable>(by: KeyPath<Element, Key>) -> Results<Section<Element, Key>> where Element: Object {
         fatalError()
     }
+}
 
-    public struct Section<Element: Object, Key: _Persistable>: RealmCollectionValue {
+public struct SectionedResults<Element: Object, Key>: Sequence, IteratorProtocol {
 
-        // Section Key
-
-        var key: Key
-
-
-
-        public static func == (lhs: Section<Element, Key>, rhs: Section<Element, Key>) -> Bool {
-            fatalError()
-        }
-
-        public static func _rlmDefaultValue() -> Section<Element, Key> {
-            fatalError()
-        }
-
-        public typealias PersistedType = Element
-
-        public static func _rlmFromObjc(_ value: Any, insideOptional: Bool) -> Section<Element, Key>? {
-            fatalError()
-        }
-
-        public var _rlmObjcValue: Any
-
-        public var hashValue: Int = 0
-
-        public func hash(into hasher: inout Hasher) { }
+    public subscript(_ index: Int) -> Self {
+        fatalError()
     }
+
+    public subscript(indexPath indexPath: IndexPath) -> Element {
+        fatalError()
+    }
+
+    public func observe(on queue: DispatchQueue? = nil,
+                        _ block: @escaping (RealmSectionedResultsChange<Self>) -> Void) -> NotificationToken {
+        fatalError()
+    }
+
+    public struct Section: Sequence, IteratorProtocol {
+        let key: Key
+        let values: [Element]
+
+        public func next() -> Element? {
+            nil
+        }
+    }
+
+    public func next() -> Section? {
+        nil
+    }
+}
+
+@frozen public enum RealmSectionedResultsChange<CollectionType> {
+   /**
+    `.initial` indicates that the initial run of the query has completed (if
+    applicable), and the collection can now be used without performing any
+    blocking work.
+    */
+   case initial(CollectionType)
+
+   /**
+    `.update` indicates that a write transaction has been committed which
+    either changed which objects are in the collection, and/or modified one
+    or more of the objects in the collection.
+
+    All three of the change arrays are always sorted in ascending order.
+
+    - parameter deletions:     The indices in the previous version of the collection which were removed from this one.
+    - parameter insertions:    The indices in the new collection which were added in this version.
+    - parameter modifications: The indices of the objects which were modified in the previous version of this collection.
+    */
+   case update(CollectionType, deletions: [Int], insertions: [Int], modifications: [Int])
+
+   /**
+    If an error occurs, notification blocks are called one time with a `.error`
+    result and an `NSError` containing details about the error. This can only
+    currently happen if opening the Realm on a background thread to calcuate
+    the change set fails. The callback will never be called again after it is
+    invoked with a .error value.
+    */
+   case error(Error)
 }
 
 extension Results: Encodable where Element: Encodable {}

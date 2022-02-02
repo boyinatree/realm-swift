@@ -1042,7 +1042,13 @@ class RealmTests: TestCase {
     }
 
     func testSectioned() {
-        let sectionedResults = try! Realm().objects(SwiftObject.self).sectioned(by: \.stringCol)
+        let sectionedResults = try! Realm().objects(SwiftObject.self)
+            .where { $0.intCol == 123 }
+            .sorted(by: \.stringCol, ascending: true)
+            .sectioned(by: \.stringCol.first)
+
+        var someIndex = IndexPath(item: 0, section: 0)
+        let element = sectionedResults[indexPath: someIndex]
 
         for section in sectionedResults {
             print(section.key)
@@ -1051,7 +1057,7 @@ class RealmTests: TestCase {
             }
         }
 
-        let token = sectionedResults.observe { (changes: RealmCollectionChange) in
+        let token = sectionedResults.observe { (changes: RealmSectionedResultsChange) in
             switch changes {
             case .initial(let collection):
                 break
@@ -1063,4 +1069,31 @@ class RealmTests: TestCase {
         }
     }
 
+
+
+    // check core data
+    // check swiftui
+    // check uitableview
+
+    /*
+     struct B: View {
+         @ObservedSectionedResults(Person.self, \.lastName.first)
+         var peopleByLastName
+
+         var body: some View {
+             List {
+                 ForEach(peopleByLastName) { section in
+                     Section(section.key) {
+                         ForEach(section.results) { person in
+                             HStack {
+                                 Text(person.firstName)
+                                 Text(person.lastName)
+                             }
+                         }
+                     }
+                 }
+             }
+         }
+     }
+     */
 }
