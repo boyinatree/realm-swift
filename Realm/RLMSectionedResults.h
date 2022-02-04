@@ -33,7 +33,7 @@ NS_ASSUME_NONNULL_BEGIN
 // private
 
 - (instancetype)initWithResults:(RLMResults<RLMObjectType> *)results
-                     sectionKey:(NSString *)sectionKey;
+                     sectionKeyPath:(NSString *)sectionKey;
 
 @end
 

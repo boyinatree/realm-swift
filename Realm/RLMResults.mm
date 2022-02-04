@@ -520,7 +520,7 @@ static inline void RLMResultsValidateInWriteTransaction(__unsafe_unretained RLMR
 }
 
 - (RLMSectionedResults *)sectionedResultsUsingKeyPath:(NSString *)keyPath {
-    return [[RLMSectionedResults alloc] initWithResults:self sectionKey:keyPath];
+    return [[RLMSectionedResults alloc] initWithResults:self sectionKeyPath:keyPath];
 }
 
 - (instancetype)resolveInRealm:(RLMRealm *)realm {
