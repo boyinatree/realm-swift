@@ -21,7 +21,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class RLMObject;
-
+@class RLMSectionedResults<RLMObjectType>;
 /**
  `RLMResults` is an auto-updating container type in Realm returned from object
  queries. It represents the results of the query in the form of a collection of objects.
@@ -473,6 +473,8 @@ __attribute__((warn_unused_result));
 
 /// :nodoc:
 - (RLMObjectType)objectAtIndexedSubscript:(NSUInteger)index;
+
+- (RLMSectionedResults<RLMObjectType> *)sectionedResultsUsingKeyPath:(NSString *)keyPath;
 
 #pragma mark - Freeze
 

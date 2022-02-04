@@ -30,6 +30,7 @@
 #import "RLMRealm_Private.hpp"
 #import "RLMRealmConfiguration_Private.hpp"
 #import "RLMSchema_Private.h"
+#import "RLMSectionedResults.h"
 #import "RLMThreadSafeReference_Private.hpp"
 #import "RLMUtil.hpp"
 
@@ -516,6 +517,10 @@ static inline void RLMResultsValidateInWriteTransaction(__unsafe_unretained RLMR
 
 - (BOOL)isFrozen {
     return _realm.frozen;
+}
+
+- (RLMSectionedResults *)sectionedResultsUsingKeyPath:(NSString *)keyPath {
+    return [[RLMSectionedResults alloc] initWithResults:self sectionKey:keyPath];
 }
 
 - (instancetype)resolveInRealm:(RLMRealm *)realm {

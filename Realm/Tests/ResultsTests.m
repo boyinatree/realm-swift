@@ -20,11 +20,28 @@
 
 #import <mach/mach.h>
 #import <objc/runtime.h>
+#import "RLMSectionedResults.h"
 
 @interface ResultsTests : RLMTestCase
 @end
 
 @implementation ResultsTests
+
+- (void)testSectionedResults
+{
+    RLMRealm *realm = self.realmWithTestPath;
+    RLMResults<StringObject *> *results = [StringObject allObjectsInRealm:realm];
+
+    RLMSectionedResults<StringObject *> *sectionedResults = [results sectionedResultsUsingKeyPath:@"stringCol.first"];
+
+    for (RLMSection *section in sectionedResults) {
+        NSLog(@"%@", section.key);
+        for (StringObject *o in section) {
+            NSLog(@"%@", o.stringCol);
+        }
+    }
+
+}
 
 - (void)testFastEnumeration
 {
