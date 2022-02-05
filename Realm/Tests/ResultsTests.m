@@ -32,7 +32,7 @@
     RLMRealm *realm = self.realmWithTestPath;
     RLMResults<StringObject *> *results = [StringObject allObjectsInRealm:realm];
 
-    RLMSectionedResults<StringObject *> *sectionedResults = [results sectionedResultsUsingKeyPath:@"stringCol.first"];
+    RLMSectionedResults<StringObject *> *sectionedResults = [results sectionedResultsUsingKeyPath:@"stringCol"];
 
     for (RLMSection *section in sectionedResults) {
         NSLog(@"%@", section.key);

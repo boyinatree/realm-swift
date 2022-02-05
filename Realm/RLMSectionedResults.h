@@ -30,11 +30,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly, assign) NSUInteger count;
 
 
-// private
-
-- (instancetype)initWithResults:(RLMResults<RLMObjectType> *)results
-                     sectionKeyPath:(NSString *)sectionKey;
-
 @end
 
 NS_ASSUME_NONNULL_END

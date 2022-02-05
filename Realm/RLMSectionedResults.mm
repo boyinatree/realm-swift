@@ -5,19 +5,17 @@
 //  Created by Lee Maguire on 03/02/2022.
 //
 
-#import "RLMSectionedResults.h"
+#import "RLMSectionedResults_Private.hpp"
 #import "RLMResults.h"
 #import "RLMResults_Private.hpp"
 
-@implementation RLMSectionedResults {
-    RLMResults *_rlmResults;
-    realm::Results _results;
-}
+@implementation RLMSectionedResults
 
-- (instancetype)initWithResults:(RLMResults *)results
+- (instancetype)initWithResults:(realm::Results)results
                  sectionKeyPath:(NSString *)sectionKey {
     if (self = [super init]) {
-        _results.section_by_key_path("");
+        _results = std::move(results);
+        _results.section_by_key_path(std::string(sectionKey.UTF8String));
     }
     return self;
 }
