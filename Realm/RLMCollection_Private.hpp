@@ -65,9 +65,22 @@ class RLMClassInfo;
                      collection:(id)collection
                       classInfo:(RLMClassInfo&)info;
 
+- (instancetype)initWithResults:(realm::Results&)results
+                     collection:(id)collection
+                      classInfo:(RLMClassInfo&)info
+                       sections:(std::vector<size_t>)sections;
+
 // Detach this enumerator from the source collection. Must be called before the
 // source collection is changed.
 - (void)detach;
+
+
+- (NSUInteger)sectionCountByEnumeratingWithState:(NSFastEnumerationState *)state
+                                           count:(NSUInteger)len
+                                    sectionIndex:(NSUInteger)sectionIndex;
+
+- (NSUInteger)sectionedCountByEnumeratingWithState:(NSFastEnumerationState *)state
+                                             count:(NSUInteger)len;
 
 - (NSUInteger)countByEnumeratingWithState:(NSFastEnumerationState *)state
                                     count:(NSUInteger)len;

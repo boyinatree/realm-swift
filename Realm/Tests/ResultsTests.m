@@ -30,16 +30,37 @@
 - (void)testSectionedResults
 {
     RLMRealm *realm = self.realmWithTestPath;
+    [realm transactionWithBlock:^{
+        [StringObject createInRealm:realm withValue:@[@"hello"]];
+        [StringObject createInRealm:realm withValue:@[@"hey"]];
+        [StringObject createInRealm:realm withValue:@[@"foo"]];
+        [StringObject createInRealm:realm withValue:@[@"foop"]];
+        [StringObject createInRealm:realm withValue:@[@"bar"]];
+        [StringObject createInRealm:realm withValue:@[@"bur"]];
+    }];
     RLMResults<StringObject *> *results = [StringObject allObjectsInRealm:realm];
 
     RLMSectionedResults<StringObject *> *sectionedResults = [results sectionedResultsUsingKeyPath:@"stringCol"];
 
-    for (RLMSection *section in sectionedResults) {
-        NSLog(@"%@", section.key);
-        for (StringObject *o in section) {
-            NSLog(@"%@", o.stringCol);
+    for (size_t i = 0; i < sectionedResults.count; i++) {
+        NSLog(@"%@", sectionedResults[i].key);
+
+        RLMSection<StringObject *> *section = sectionedResults[i];
+
+        for (size_t y = 0; y < section.count; y++) {
+            NSLog(@"%@", section[y].stringCol);
         }
+
+
     }
+
+
+//    for (RLMSection *section in sectionedResults) {
+//        NSLog(@"%@", section.key);
+//        for (StringObject *o in section) {
+//            NSLog(@"%@", o.stringCol);
+//        }
+//    }
 
 }
 

@@ -504,7 +504,8 @@ static inline void RLMResultsValidateInWriteTransaction(__unsafe_unretained RLMR
 
 - (RLMFastEnumerator *)fastEnumerator {
     return translateRLMResultsErrors([&] {
-        return [[RLMFastEnumerator alloc] initWithResults:_results collection:self
+        return [[RLMFastEnumerator alloc] initWithResults:_results
+                                               collection:self
                                                 classInfo:*_info];
     });
 }
@@ -520,7 +521,7 @@ static inline void RLMResultsValidateInWriteTransaction(__unsafe_unretained RLMR
 }
 
 - (RLMSectionedResults *)sectionedResultsUsingKeyPath:(NSString *)keyPath {
-    return [[RLMSectionedResults alloc] initWithResults:_results sectionKeyPath:keyPath];
+    return [[RLMSectionedResults alloc] initWithResults:_results objectInfo:*_info sectionKeyPath:keyPath];
 }
 
 - (instancetype)resolveInRealm:(RLMRealm *)realm {

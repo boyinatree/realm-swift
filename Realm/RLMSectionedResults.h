@@ -20,6 +20,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, strong) NSString *key;
 @property (nonatomic, strong) RLMSectionValues<RLMObjectType> *values;
+@property (nonatomic, readonly, assign) NSUInteger count;
+
+- (RLMObjectType)objectAtIndexedSubscript:(NSUInteger)index;
 
 @end
 
@@ -28,6 +31,9 @@ NS_ASSUME_NONNULL_BEGIN
 @interface RLMSectionedResults<RLMObjectType> : NSObject<NSFastEnumeration>
 
 @property (nonatomic, readonly, assign) NSUInteger count;
+
+- (RLMSection *)objectAtIndexedSubscript:(NSUInteger)index;
+
 
 
 @end
