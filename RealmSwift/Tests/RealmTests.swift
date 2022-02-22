@@ -24,8 +24,59 @@ import XCTest
 #endif
 import Foundation
 
+class MyClass: Object {
+   @Persisted var myList = List<AnyRealmValue>()
+}
+
+class DogClass: Object {
+   @Persisted var name = ""
+}
+
+class PersonClass: Object {
+   @Persisted var name = ""
+}
+
+//let dog = DogClass()
+//let person = PersonClass()
+//
+//let obj0: AnyRealmValue = .object(dog) //both of these are objects, even through they are different objects
+//let obj1: AnyRealmValue = .object(person)
+//
+//let m = MyClass()
+//m.myList.append(obj0)
+//m.myList.append(obj1)
+
 @available(*, deprecated) // Silence deprecation warnings for RealmOptional
 class RealmTests: TestCase {
+
+    func testMixed() {
+
+        let realm = try! Realm()
+        let myClass = MyClass()
+
+        let dog = DogClass()
+        let person = PersonClass()
+
+        try! realm.write {
+            realm.add(myClass)
+            myClass.myList.append(.object(dog))
+            myClass.myList.append(.object(person))
+            myClass.myList.append(.int(123))
+        }
+
+        for item in myClass.myList {
+            if let person = item.object(PersonClass.self) {
+                print("is a person")
+            } else if let dog = item.object(DogClass.self) {
+                print("is a dog")
+            } else if let i = item.intValue {
+                print("is an int")
+            }
+        }
+
+    }
+
+
     enum TestError: Error {
         case intentional
     }
@@ -1042,31 +1093,53 @@ class RealmTests: TestCase {
     }
 
     func testSectioned() {
-        let sectionedResults = try! Realm().objects(SwiftObject.self)
-            .where { $0.intCol == 123 }
-            .sorted(by: \.stringCol, ascending: true)
-            .sectioned(by: \.stringCol.first)
+
+        let realm = try! Realm()
+
+        let o = ModernAllTypesObject()
+        try! realm.write {
+            o.intCol = 123
+            realm.add(o)
+        }
+        let foo = 123
+        let objs = realm.objects(ModernAllTypesObject.self).filter("stringCol == \(foo)")
+        print(objs)
+
+        try! realm.write {
+            realm.add(ModernSwiftStringObject(value: ["ahead"]))
+            realm.add(ModernSwiftStringObject(value: ["aye"]))
+            realm.add(ModernSwiftStringObject(value: [""]))
+            realm.add(ModernSwiftStringObject(value: ["coffee"]))
+            realm.add(ModernSwiftStringObject(value: ["bread"]))
+            realm.add(ModernSwiftStringObject(value: ["banana"]))
+            realm.add(ModernSwiftStringObject(value: ["apple"]))
+        }
+
+
+        let sectionedResults = realm.objects(ModernSwiftStringObject.self)
+            .sectioned(by: \.stringCol.first, ascending: true)
 
         var someIndex = IndexPath(item: 0, section: 0)
         let element = sectionedResults[indexPath: someIndex]
 
-        for section in sectionedResults {
+        for i in 0..<sectionedResults.count {
+            let section = sectionedResults[i]
             print(section.key)
-            for obj in section {
-                print(obj)
+            for y in 0..<section.count {
+                print(section[y])
             }
         }
 
-        let token = sectionedResults.observe { (changes: RealmSectionedResultsChange) in
-            switch changes {
-            case .initial(let collection):
-                break
-            case .update:
-                break
-            case .error:
-                break
-            }
-        }
+//        let token = sectionedResults.observe { (changes: RealmSectionedResultsChange) in
+//            switch changes {
+//            case .initial(let collection):
+//                break
+//            case .update:
+//                break
+//            case .error:
+//                break
+//            }
+//        }
     }
 
 

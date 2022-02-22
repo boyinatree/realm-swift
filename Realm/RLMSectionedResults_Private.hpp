@@ -13,26 +13,28 @@
 #ifndef Header_h
 #define Header_h
 
+typedef BOOL(^RLMSectionResultsComparionBlock)(id, id);
 
 @interface RLMSectionedResults () {
-@protected
-    realm::Results _results;
+    @public
+    realm::SectionedResults _sectionedResults;
 }
 
-- (instancetype)initWithResults:(realm::Results)results
+- (instancetype)initWithResults:(RLMResults *)results
                      objectInfo:(RLMClassInfo&)objectInfo
-                     sectionKeyPath:(NSString *)sectionKey;
+                comparisonBlock:(RLMSectionResultsComparionBlock)comparisonBlock
+      sortedResultsUsingKeyPath:(NSString *)sortKeyPath
+                      ascending:(BOOL)ascending
+                        isSwift:(BOOL)isSwift;
+
+- (RLMRealm *)realm;
 
 @end
 
-@interface RLMSection () {
-@protected
-    std::shared_ptr<realm::Results> _results;
-}
+@interface RLMSection ()
 
-- (instancetype)initWithResults:(std::shared_ptr<realm::Results>)results
-                     objectInfo:(RLMClassInfo&)objectInfo
-                   sectionIndex:(NSUInteger)sectionIndex;
+- (instancetype)initWithResultsSection:(realm::ResultsSection&&)resultsSection
+                            objectInfo:(RLMClassInfo&)objectInfo;
 
 @end
 

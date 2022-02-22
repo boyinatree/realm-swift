@@ -202,10 +202,8 @@ static const int RLMEnumerationBufferSize = 16;
         auto shared_results = std::make_shared<realm::Results>(*_results);
 
         for (NSUInteger index = state->state; index < count && batchCount < len; ++index) {
-            RLMSection *section = [[RLMSection alloc] initWithResults:shared_results
-                                                           objectInfo:*_info
-                                                         sectionIndex:index/*_results->section_indicies->at(index)*/];
-            _strongBuffer[batchCount] = section;
+//            RLMSection *section = [[RLMSection alloc] initWithResultsSection:<#(realm::ResultsSection &&)#> objectInfo:<#(RLMClassInfo &)#>];
+//            _strongBuffer[batchCount] = section;
             batchCount++;
         }
 
@@ -516,6 +514,48 @@ static NSArray *toIndexPathArray(realm::IndexSet const& set, NSUInteger section)
 }
 
 @end
+
+
+@implementation RLMSectionedResultsChange {
+    realm::SectionedResultsChangeSet _indices;
+}
+
+- (instancetype)initWithChanges:(realm::SectionedResultsChangeSet)indices {
+    self = [super init];
+    if (self) {
+        _indices = std::move(indices);
+    }
+    return self;
+}
+
+- (NSSet<NSIndexPath *> *)insertions {
+    RLMThrowResultsError(@"");
+//    return toArray(_indices.insertions);
+}
+
+- (NSIndexSet *)deletions {
+    RLMThrowResultsError(@"");
+}
+
+- (NSIndexSet *)modifications {
+    RLMThrowResultsError(@"");
+}
+
+- (NSString *)description {
+    return [NSString stringWithFormat:@"<RLMSectionedResultsChange: %p> insertions: %@, deletions: %@, modifications: %@",
+            (__bridge void *)self, self.insertions, self.deletions, self.modifications];
+}
+
+//- (NSSet<NSIndexPath *> *)toSet:(std::map<size_t, std::set<size_t>>)indicies {
+//    NSMutableSet<NSIndexPath *> *s = [NSMutableSet new];
+//    for (auto i : indicies) {
+//
+//    }
+//    return
+//}
+
+@end
+
 
 namespace {
 struct CollectionCallbackWrapper {

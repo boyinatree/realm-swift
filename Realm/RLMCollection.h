@@ -579,4 +579,10 @@ __attribute__((warn_unused_result));
 - (NSArray<NSIndexPath *> *)modificationsInSection:(NSUInteger)section;
 @end
 
+@interface RLMSectionedResultsChange : NSObject
+@property (nonatomic, readonly) NSIndexSet *deletions;
+@property (nonatomic, readonly) NSIndexSet *insertions;
+@property (nonatomic, readonly) NSIndexSet *modifications;
+@end
+
 NS_ASSUME_NONNULL_END

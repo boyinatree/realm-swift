@@ -22,6 +22,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class RLMObject;
 @class RLMSectionedResults<RLMObjectType>;
+
+typedef BOOL(^RLMSectionResultsComparionBlock)(id, id);
+
+
 /**
  `RLMResults` is an auto-updating container type in Realm returned from object
  queries. It represents the results of the query in the form of a collection of objects.
@@ -474,8 +478,21 @@ __attribute__((warn_unused_result));
 /// :nodoc:
 - (RLMObjectType)objectAtIndexedSubscript:(NSUInteger)index;
 
-- (RLMSectionedResults<RLMObjectType> *)sectionedResultsUsingKeyPath:(NSString *)keyPath;
+/**
+ Sorts and sections this collection from a given property key path, returning the result
+ as an instance of `RLMSectionedResults`.
 
+ @param sortingKeyPath The key path to section by.
+ @param ascending The direction to sort in.
+ @param comparisonBlock The comparison function to use to compare two elements at a time.
+                        A section begins when the two values being compared do not match.
+                        The two values being compared will be of the type of the property being sectioned on.
+
+ @return An instance of RLMSectionedResults.
+ */
+- (RLMSectionedResults<RLMObjectType> *)sectionedResultsSortedUsingKeyPath:(NSString *)sortingKeyPath
+                                                                 ascending:(BOOL)ascending
+                                                           comparisonBlock:(RLMSectionResultsComparionBlock)block;
 #pragma mark - Freeze
 
 /**

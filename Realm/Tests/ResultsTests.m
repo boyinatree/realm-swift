@@ -31,37 +31,71 @@
 {
     RLMRealm *realm = self.realmWithTestPath;
     [realm transactionWithBlock:^{
-        [StringObject createInRealm:realm withValue:@[@"hello"]];
-        [StringObject createInRealm:realm withValue:@[@"hey"]];
-        [StringObject createInRealm:realm withValue:@[@"foo"]];
-        [StringObject createInRealm:realm withValue:@[@"foop"]];
         [StringObject createInRealm:realm withValue:@[@"bar"]];
+        [StringObject createInRealm:realm withValue:@[@"hey"]];
+        [StringObject createInRealm:realm withValue:@[@"foop"]];
+        [StringObject createInRealm:realm withValue:@[@"h"]];
+        [StringObject createInRealm:realm withValue:@[@"foo"]];
+        [StringObject createInRealm:realm withValue:@[@"hello"]];
         [StringObject createInRealm:realm withValue:@[@"bur"]];
     }];
-    RLMResults<StringObject *> *results = [StringObject allObjectsInRealm:realm];
 
-    RLMSectionedResults<StringObject *> *sectionedResults = [results sectionedResultsUsingKeyPath:@"stringCol"];
+    RLMResults<StringObject *> *results = [StringObject allObjectsInRealm:realm];
+    RLMSectionedResults<StringObject *> *sectionedResults = [results sectionedResultsSortedUsingKeyPath:@"stringCol"
+                                                                                              ascending:YES
+                                                                                        comparisonBlock:^BOOL(NSString *first, NSString *second) {
+        return [[first substringToIndex:1] isEqualToString:[second substringToIndex:1]];
+    }];
+
+    id token = [sectionedResults addNotificationBlock:^(RLMSectionedResults * _Nonnull r,
+                                                        RLMSectionedResultsChange * _Nonnull c,
+                                                        NSError * _Nonnull e) {
+        //...
+    }];
+
 
     for (size_t i = 0; i < sectionedResults.count; i++) {
-        NSLog(@"%@", sectionedResults[i].key);
-
         RLMSection<StringObject *> *section = sectionedResults[i];
-
+        NSLog(@"Key: %@", [section[0].stringCol substringToIndex:1]);
         for (size_t y = 0; y < section.count; y++) {
             NSLog(@"%@", section[y].stringCol);
         }
-
-
     }
 
+    [realm transactionWithBlock:^{
+        [StringObject createInRealm:realm withValue:@[@"jane"]];
+        [StringObject createInRealm:realm withValue:@[@"shaggy"]];
+        [StringObject createInRealm:realm withValue:@[@"jan"]];
+        [StringObject createInRealm:realm withValue:@[@"scooby"]];
+        [StringObject createInRealm:realm withValue:@[@"apple"]];
+        [StringObject createInRealm:realm withValue:@[@"any"]];
+        [StringObject createInRealm:realm withValue:@[@"macbook"]];
+    }];
 
-//    for (RLMSection *section in sectionedResults) {
-//        NSLog(@"%@", section.key);
-//        for (StringObject *o in section) {
-//            NSLog(@"%@", o.stringCol);
-//        }
-//    }
+    [realm transactionWithBlock:^{
+    }];
 
+    [realm transactionWithBlock:^{
+        [StringObject createInRealm:realm withValue:@[@"jane"]];
+    }];
+
+    [realm transactionWithBlock:^{
+        [StringObject createInRealm:realm withValue:@[@"jane"]];
+        [StringObject createInRealm:realm withValue:@[@"jane"]];
+    }];
+
+    [realm transactionWithBlock:^{
+    }];
+
+    for (size_t i = 0; i < sectionedResults.count; i++) {
+        RLMSection<StringObject *> *section = sectionedResults[i];
+        NSLog(@"Key: %@", [section[0].stringCol substringToIndex:1]);
+        for (size_t y = 0; y < section.count; y++) {
+            NSLog(@"%@", section[y].stringCol);
+        }
+    }
+
+    token = nil;
 }
 
 - (void)testFastEnumeration
