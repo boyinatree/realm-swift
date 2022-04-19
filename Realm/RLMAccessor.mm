@@ -834,7 +834,9 @@ RLMAccessorContext::RLMAccessorContext(__unsafe_unretained RLMObjectBase *const 
 : _realm(parent->_realm)
 , _info(prop && prop->type == realm::PropertyType::Object ? parent->_info->linkTargetType(*prop)
                                                           : *parent->_info)
+, _parentObject(parent->_row)
 , _parentObjectInfo(parent->_info)
+, _colKey(prop ? prop->column_key : ColKey{})
 {
 }
 
@@ -921,6 +923,11 @@ id RLMAccessorContext::box(realm::Object&& o) {
 }
 
 id RLMAccessorContext::box(realm::Obj&& r) {
+    if (!currentProperty) {
+        // If currentProperty is set then the caller took care of reporting
+        // the audit event
+        realm::Object(_realm->_realm, *_info.objectSchema, r, _parentObject, _colKey);
+    }
     return RLMCreateObjectAccessor(_info, std::move(r));
 }
 

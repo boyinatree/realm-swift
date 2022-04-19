@@ -71,7 +71,8 @@ let objectServerTestSources = [
     "RLMUser+ObjectServerTests.mm",
     "RLMWatchTestUtility.h",
     "RLMWatchTestUtility.m",
-    "RealmServer.swift",
+    "AuditTests.swift" ,
+    "RealmServer.swift" ,
     "SwiftCollectionSyncTests.swift",
     "SwiftFlexibleSyncServerTests.swift",
     "SwiftMongoClientTests.swift",
@@ -83,6 +84,7 @@ let objectServerTestSources = [
     "TimeoutProxyServer.swift",
     "WatchTestUtility.swift",
     "certificates",
+    "config_overrides.json",
     "include",
     "setup_baas.rb",
 ]
@@ -167,6 +169,7 @@ let package = Package(
                 "scripts",
             ],
             sources: [
+                "Realm/RLMAudit.mm",
                 "Realm/RLMAccessor.mm",
                 "Realm/RLMAnalytics.mm",
                 "Realm/RLMArray.mm",
@@ -314,6 +317,7 @@ let package = Package(
         objectServerTestTarget(
             name: "SwiftObjectServerTests",
             sources: [
+                "AuditTests.swift",
                 "SwiftObjectServerTests.swift",
                 "SwiftCollectionSyncTests.swift",
                 "SwiftObjectServerPartitionTests.swift",
