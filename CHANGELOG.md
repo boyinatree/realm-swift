@@ -22,8 +22,7 @@ x.y.z Release notes (yyyy-MM-dd)
 * Replace Xcode 13.3 binaries with 13.3.1 binaries.
 
 ### Fixed
-* <How to hit and notice issue? what was the impact?> ([#????](https://github.com/realm/realm-swift/issues/????), since v?.?.?)
-* None.
+* Defer `Realm.asyncOpen` operation on `@AsyncOpen` and `@AutoOpen` property wrappers, this will guarantee all the environment values are setted before opening any realm.
 
 <!-- ### Breaking Changes - ONLY INCLUDE FOR NEW MAJOR version -->
 
