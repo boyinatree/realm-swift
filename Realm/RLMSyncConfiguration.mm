@@ -42,7 +42,7 @@ using namespace realm;
 @implementation RLMCocoaSocketDelegate
 
 - (void)URLSession:(NSURLSession *)session webSocketTask:(NSURLSessionWebSocketTask *)webSocketTask didOpenWithProtocol:(NSString *)protocol {
-    _observer->websocket_handshake_completion_handler([protocol cString]);
+    _observer->websocket_handshake_completion_handler([protocol cStringUsingEncoding:NSUTF8StringEncoding]);
 }
 
 - (void)URLSession:(NSURLSession *)session webSocketTask:(NSURLSessionWebSocketTask *)webSocketTask didCloseWithCode:(NSURLSessionWebSocketCloseCode)closeCode reason:(NSData *)reason {
@@ -53,16 +53,18 @@ using namespace realm;
 @end
 
 namespace realm::util::websocket {
-class CocoaSocketFactory: public EZSocketFactory, public EZSocket {
+class API_AVAILABLE(ios(13.0), macos(10.15), tvos(13.0), watchos(6.0)) CocoaSocketFactory: public EZSocketFactory, public EZSocket {
 public:
-    using EZSocketFactory::EZSocketFactory;
+    CocoaSocketFactory(EZConfig config)
+        : EZSocketFactory(config)
+    {
+    }
 
     RLMCocoaSocketDelegate *delegate;
     NSURLSessionWebSocketTask *task;
 
     void async_write_binary(const char *data, size_t size, util::UniqueFunction<void ()> &&handler) override
     {
-
         [task sendMessage:[[NSURLSessionWebSocketMessage alloc] initWithString:@(data)]
         completionHandler:^(NSError * _Nullable error) {
             handler();
@@ -288,10 +290,7 @@ RLMSyncSystemErrorKind errorKindForSyncError(SyncError error) {
             }
         }
 
-        using namespace realm::util::websocket;
-        _config->socket_factory = [](EZConfig&& config) mutable {
-            return std::unique_ptr<EZSocketFactory>(new CocoaSocketFactory(std::move(config)));
-        };
+        _config->socket_factory = defaultSocketFactory();
         self.customFileURL = customFileURL;
         return self;
     }
@@ -299,3 +298,10 @@ RLMSyncSystemErrorKind errorKindForSyncError(SyncError error) {
 }
 
 @end
+
+std::function<std::unique_ptr<realm::util::websocket::EZSocketFactory>(util::websocket::EZConfig&&)> defaultSocketFactory() {
+    using namespace realm::util::websocket;
+    return [](EZConfig&& config) mutable {
+        return std::unique_ptr<EZSocketFactory>(new CocoaSocketFactory(std::move(config)));
+    };
+}
