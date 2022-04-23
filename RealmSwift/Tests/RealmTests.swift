@@ -1116,19 +1116,19 @@ class RealmTests: TestCase {
         }
 
 
-        let sectionedResults = realm.objects(ModernSwiftStringObject.self)
-            .sectioned(by: \.stringCol.first, ascending: true)
-
-        var someIndex = IndexPath(item: 0, section: 0)
-        let element = sectionedResults[indexPath: someIndex]
-
-        for i in 0..<sectionedResults.count {
-            let section = sectionedResults[i]
-            print(section.key)
-            for y in 0..<section.count {
-                print(section[y])
-            }
-        }
+//        let sectionedResults = realm.objects(ModernSwiftStringObject.self)
+//            .sectioned(by: \.stringCol.first, ascending: true)
+//
+//        var someIndex = IndexPath(item: 0, section: 0)
+//        let element = sectionedResults[indexPath: someIndex]
+//
+//        for i in 0..<sectionedResults.count {
+//            let section = sectionedResults[i]
+//            print(section.key)
+//            for y in 0..<section.count {
+//                print(section[y])
+//            }
+//        }
 
 //        let token = sectionedResults.observe { (changes: RealmSectionedResultsChange) in
 //            switch changes {

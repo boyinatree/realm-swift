@@ -41,10 +41,9 @@
     }];
 
     RLMResults<StringObject *> *results = [StringObject allObjectsInRealm:realm];
-    RLMSectionedResults<StringObject *> *sectionedResults = [results sectionedResultsSortedUsingKeyPath:@"stringCol"
-                                                                                              ascending:YES
-                                                                                        comparisonBlock:^BOOL(NSString *first, NSString *second) {
-        return [[first substringToIndex:1] isEqualToString:[second substringToIndex:1]];
+    RLMSectionedResults<StringObject *> *sectionedResults = [results sectionedResultsSortedAscending:NO
+                                                                                     comparisonBlock:^id<RLMValue>(StringObject *o) {
+        return [o.stringCol substringToIndex:1];
     }];
 
     id token = [sectionedResults addNotificationBlock:^(RLMSectionedResults * _Nonnull r,
@@ -53,10 +52,20 @@
         //...
     }];
 
+    for (RLMSection *s in sectionedResults) {
+        NSLog(@"%@", s.key);
+        for (StringObject *o in s) {
+            NSLog(@"%@", o.stringCol);
+        }
+    }
+
+    for (StringObject *o in sectionedResults[0]) {
+        NSLog(@"%@", o.stringCol);
+    }
 
     for (size_t i = 0; i < sectionedResults.count; i++) {
         RLMSection<StringObject *> *section = sectionedResults[i];
-        NSLog(@"Key: %@", [section[0].stringCol substringToIndex:1]);
+        NSLog(@"Key: %@", section.key);
         for (size_t y = 0; y < section.count; y++) {
             NSLog(@"%@", section[y].stringCol);
         }

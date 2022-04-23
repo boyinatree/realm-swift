@@ -19,6 +19,7 @@
 #import <Realm/RLMCollection_Private.h>
 
 #import <realm/object-store/collection_notifications.hpp>
+//#import <realm/object-store/sectioned_results.hpp>
 
 #import <vector>
 #import <mutex>
@@ -30,6 +31,7 @@ namespace realm {
     class TableView;
     struct CollectionChangeSet;
     struct ColKey;
+    struct SectionedResultsChangeSet;
     namespace object_store {
         class Collection;
         class Dictionary;

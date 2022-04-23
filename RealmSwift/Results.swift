@@ -175,36 +175,6 @@ extension Projection: KeypathSortable {}
     public static func == (lhs: Results<Element>, rhs: Results<Element>) -> Bool {
         lhs.collection.isEqual(rhs.collection)
     }
-    public func sectioned<Key: _Persistable>(by: KeyPath<Element, Key>) -> Results<Section<Element, Key>> where Element: Object {
-        fatalError()
-    }
-}
-
-public struct SectionedResults<Element: Object, Key>: Sequence, IteratorProtocol {
-
-    public subscript(_ index: Int) -> Self {
-        fatalError()
-    }
-
-    public subscript(indexPath indexPath: IndexPath) -> Element {
-        fatalError()
-    }
-
-    public func observe(on queue: DispatchQueue? = nil,
-                        _ block: @escaping (RealmSectionedResultsChange<Self>) -> Void) -> NotificationToken {
-        fatalError()
-    }
-
-    public struct Section: Sequence, IteratorProtocol {
-        let key: Key
-        let values: [Element]
-
-        public func next() -> Element? {
-            nil
-        }
-
-        return SectionedResults(rlmSectionedResults: rlmSectionedResults, keyPath: keyPath)
-    }
 }
 
 extension Results: Encodable where Element: Encodable {}

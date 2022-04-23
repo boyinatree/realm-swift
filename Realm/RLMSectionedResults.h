@@ -1,15 +1,26 @@
+////////////////////////////////////////////////////////////////////////////
 //
-//  RLMSectionedResults.h
-//  
+// Copyright 2022 Realm Inc.
 //
-//  Created by Lee Maguire on 03/02/2022.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+////////////////////////////////////////////////////////////////////////////
 
-#import <Foundation/Foundation.h>
-#import "RLMCollection.h"
+#import <Realm/RLMCollection.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
+@protocol RLMValue;
 @class RLMResults<RLMObjectType>;
 
 @interface RLMSection<RLMObjectType> : NSObject<NSFastEnumeration>
@@ -17,10 +28,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) NSArray<RLMObjectType> *values;
 /// The count of objects in this section.
 @property (nonatomic, readonly, assign) NSUInteger count;
+
+@property (nonatomic, readonly) id<RLMValue> key;
 /// Returns the object for a given index in the section.
 - (RLMObjectType)objectAtIndexedSubscript:(NSUInteger)index;
 /// Returns the object for a given index in the section.
-- (RLMObjectType)objectAtIndex:(NSUInteger)index;
+- (id)objectAtIndex:(NSUInteger)index;
 
 @end
 
@@ -30,11 +43,13 @@ NS_ASSUME_NONNULL_BEGIN
 /// Returns the section at a given index.
 - (RLMSection *)objectAtIndexedSubscript:(NSUInteger)index;
 /// Returns the section at a given index.
-- (RLMObjectType)objectAtIndex:(NSUInteger)index;
+- (RLMSection *)objectAtIndex:(NSUInteger)index;
 
 - (RLMNotificationToken *)addNotificationBlock:(void (^)(RLMSectionedResults *, RLMSectionedResultsChange *, NSError *))block;
-- (RLMNotificationToken *)addNotificationBlock:(void (^)(RLMSectionedResults *, RLMSectionedResultsChange *, NSError *))block queue:(dispatch_queue_t)queue;
-- (RLMNotificationToken *)addNotificationBlock:(void (^)(RLMSectionedResults *, RLMSectionedResultsChange *, NSError *))block keyPaths:(NSArray<NSString *> *)keyPaths;
+- (RLMNotificationToken *)addNotificationBlock:(void (^)(RLMSectionedResults *, RLMSectionedResultsChange *, NSError *))block
+                                         queue:(dispatch_queue_t)queue;
+- (RLMNotificationToken *)addNotificationBlock:(void (^)(RLMSectionedResults *, RLMSectionedResultsChange *, NSError *))block
+                                      keyPaths:(NSArray<NSString *> *)keyPaths;
 - (RLMNotificationToken *)addNotificationBlock:(void (^)(RLMSectionedResults *, RLMSectionedResultsChange *, NSError *))block
                                       keyPaths:(NSArray<NSString *> *)keyPaths
                                          queue:(dispatch_queue_t)queue;

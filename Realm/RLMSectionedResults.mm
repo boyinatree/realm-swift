@@ -12,6 +12,8 @@
 #import "RLMAccessor.hpp"
 #import "RLMRealm_Private.hpp"
 
+#import <realm/object-store/sectioned_results.hpp>
+
 #include <map>
 #include <set>
 
@@ -39,7 +41,7 @@ struct CollectionCallbackWrapper {
             block(collection, nil, nil);
         }
 
-        block(collection, [[RLMSectionedResultsChange alloc] initWithChanges:changes], nil);
+//        block(collection, [[RLMSectionedResultsChange alloc] initWithChanges:changes], nil);
 
     }
 };
@@ -55,7 +57,7 @@ RLMNotificationToken *RLMAddNotificationBlock(RLMSectionedResults *collection,
 
     if (!queue) {
         token->_realm = realm;
-        token->_token = collection->_sectionedResults.add_notification_callback({CollectionCallbackWrapper{block, collection, false}, collection->_sectionedResults}, std::move(keyPathArray));
+//        token->_token = collection->_sectionedResults.add_notification_callback({CollectionCallbackWrapper{block, collection, false}, collection->_sectionedResults}, std::move(keyPathArray));
         return token;
     }
 
@@ -65,68 +67,84 @@ RLMNotificationToken *RLMAddNotificationBlock(RLMSectionedResults *collection,
 struct SectionedResultsComparison {
     RLMClassInfo *_info;
     RLMSectionResultsComparionBlock _comparisonBlock;
-    NSString *keyPath;
-    BOOL isSwift;
 
-    bool operator()(realm::Mixed first, realm::Mixed second) {
+    realm::Mixed operator()(realm::Mixed first, realm::SharedRealm) {
         RLMAccessorContext context(*_info);
-        if (isSwift) {
-            return _comparisonBlock(context.box(first), context.box(second));
-        } else {
-            return _comparisonBlock([context.box(first) valueForKeyPath:keyPath], [context.box(second) valueForKeyPath:keyPath]);
-        }
+        return context.unbox<realm::Mixed>(_comparisonBlock(context.box(first)));
     }
 };
 
-@interface RLMSectionedResults () <RLMFastEnumerable>
+@interface RLMSectionedResultsEnumerator() {
+    // The buffer supplied by fast enumeration does not retain the objects given
+    // to it, but because we create objects on-demand and don't want them
+    // autoreleased (a table can have more rows than the device has memory for
+    // accessor objects) we need a thing to retain them.
+    id _strongBuffer[16];
+    BOOL _isSection;
+}
 @end
 
-@implementation RLMSectionedResults {
-    RLMRealm *_realm;
-    RLMClassInfo *_info;
-    RLMResults *_results;
+@implementation RLMSectionedResultsEnumerator
 
-//    SectionedResultsComparison _comparison;
-}
-
-- (instancetype)initWithResults:(RLMResults *)results
-                     objectInfo:(RLMClassInfo&)objectInfo
-                comparisonBlock:(RLMSectionResultsComparionBlock)comparisonBlock
-      sortedResultsUsingKeyPath:(NSString *)sortKeyPath
-                      ascending:(BOOL)ascending
-                        isSwift:(BOOL)isSwift {
+- (instancetype)initWithSectionedResults:(RLMSectionedResults *)sectionedResults {
     if (self = [super init]) {
-        _info = &objectInfo;
-        _results = results;
-        _realm = results.realm;
-//        _comparison = {_info, comparisonBlock}; // dont store in ivar
-        // capture _info pointer by value
-        _sectionedResults = _results->_results.sectioned_results(std::string(sortKeyPath.UTF8String),
-                                              ascending,
-                                              SectionedResultsComparison {_info, comparisonBlock, sortKeyPath, isSwift});
+        _sectionedResults = sectionedResults;
+        _isSection = NO;
+        return self;
     }
-    return self;
+    return nil;
 }
 
-- (RLMRealm *)realm {
-    return _realm;
+- (instancetype)initWithResultsSection:(RLMSection *)resultsSection {
+    if (self = [super init]) {
+        _resultsSection = resultsSection;
+        _isSection = YES;
+        return self;
+    }
+    return nil;
 }
 
-- (NSUInteger)count {
-    return translateRLMResultsErrors([&] { return _sectionedResults.size(); });
+- (NSUInteger)countByEnumeratingWithState:(NSFastEnumerationState *)state
+                                    count:(NSUInteger)len {
+    NSUInteger batchCount = 0, count = _isSection ? [_resultsSection count] : [_sectionedResults count];
+    for (NSUInteger index = state->state; index < count && batchCount < len; ++index) {
+        if (_isSection) {
+            id obj = [_resultsSection objectAtIndex:index];
+            _strongBuffer[batchCount] = obj;
+        } else {
+            auto section = [_sectionedResults objectAtIndex:index];
+            _strongBuffer[batchCount] = section;
+        }
+
+        batchCount++;
+    }
+
+    for (NSUInteger i = batchCount; i < len; ++i) {
+        _strongBuffer[i] = nil;
+    }
+
+    if (batchCount == 0) {
+        // Release our data if we're done, as we're autoreleased and so may
+        // stick around for a while
+        if (_sectionedResults) {
+            _sectionedResults = nil;
+        }
+    }
+
+
+    state->itemsPtr = (__unsafe_unretained id *)(void *)_strongBuffer;
+    state->state += batchCount;
+    state->mutationsPtr = state->extra+1;
+
+    return batchCount;
 }
 
-- (RLMFastEnumerator *)fastEnumerator {
-//    return translateRLMResultsErrors([&] {
-//        return [[RLMFastEnumerator alloc] initWithResults:_results collection:self
-//                                                classInfo:*_info];
-//    });
-}
+@end
 
-NSUInteger RLMSectionedResultsFastEnumerate(NSFastEnumerationState *state,
-                                            NSUInteger len,
-                                            id<RLMFastEnumerable> collection) {
-    __autoreleasing RLMFastEnumerator *enumerator;
+NSUInteger RLMFastEnumerate(NSFastEnumerationState *state,
+                            NSUInteger len,
+                            RLMSectionedResults *collection) {
+    __autoreleasing RLMSectionedResultsEnumerator *enumerator;
     if (state->state == 0) {
         enumerator = collection.fastEnumerator;
         state->extra[0] = (long)enumerator;
@@ -136,21 +154,67 @@ NSUInteger RLMSectionedResultsFastEnumerate(NSFastEnumerationState *state,
         enumerator = (__bridge id)(void *)state->extra[0];
     }
 
-    return [enumerator sectionedCountByEnumeratingWithState:state count:len];
+    return [enumerator countByEnumeratingWithState:state count:len];
+}
+
+NSUInteger RLMFastEnumerate(NSFastEnumerationState *state,
+                            NSUInteger len,
+                            RLMSection *collection) {
+    __autoreleasing RLMSectionedResultsEnumerator *enumerator;
+    if (state->state == 0) {
+        enumerator = collection.fastEnumerator;
+        state->extra[0] = (long)enumerator;
+        state->extra[1] = collection.count;
+    }
+    else {
+        enumerator = (__bridge id)(void *)state->extra[0];
+    }
+
+    return [enumerator countByEnumeratingWithState:state count:len];
+}
+
+@interface RLMSectionedResults ()
+@end
+
+@implementation RLMSectionedResults {
+    RLMRealm *_realm;
+    RLMClassInfo *_info;
+    RLMResults *_rlmResults;
+    realm::SectionedResults _sectionedResults;
+}
+
+- (instancetype)initWithResults:(RLMResults *)results
+                     objectInfo:(RLMClassInfo&)objectInfo
+                comparisonBlock:(RLMSectionResultsComparionBlock)comparisonBlock
+                      ascending:(BOOL)ascending
+                        isSwift:(BOOL)isSwift {
+    if (self = [super init]) {
+        _info = &objectInfo;
+        _rlmResults = results;
+        _realm = results.realm;
+        _sectionedResults = _rlmResults->_results.sectioned_results(SectionedResultsComparison {_info, comparisonBlock});
+    }
+    return self;
+}
+
+- (RLMSectionedResultsEnumerator *)fastEnumerator {
+    return [[RLMSectionedResultsEnumerator alloc] initWithSectionedResults:self];
+}
+
+- (RLMRealm *)realm {
+    return _realm;
+}
+
+- (NSUInteger)count {
+    return translateRLMResultsErrors([&] {
+        return _sectionedResults.size();
+    });
 }
 
 - (NSUInteger)countByEnumeratingWithState:(NSFastEnumerationState *)state
                                   objects:(__unused __unsafe_unretained id [])buffer
                                     count:(NSUInteger)len {
-    if (!_info) {
-        return 0;
-    }
-//    if (state->state == 0) {
-//        translateRLMResultsErrors([&] {
-//            _results.evaluate_query_if_needed();
-//        });
-//    }
-    return RLMSectionedResultsFastEnumerate(state, len, self);
+    return RLMFastEnumerate(state, len, self);
 }
 
 - (id)objectAtIndexedSubscript:(NSUInteger)index {
@@ -188,7 +252,7 @@ NSUInteger RLMSectionedResultsFastEnumerate(NSFastEnumerationState *state,
 
 @end
 
-@interface RLMSection () <RLMFastEnumerable>
+@interface RLMSection ()
 @end
 
 @implementation RLMSection {
@@ -214,7 +278,8 @@ NSUInteger RLMSectionedResultsFastEnumerate(NSFastEnumerationState *state,
 - (id)objectAtIndex:(NSUInteger)index {
     RLMAccessorContext ctx(*_info);
     return translateRLMResultsErrors([&] {
-        return _resultsSection.get(ctx, index);
+        return ctx.box(_resultsSection[index]);
+//        return _resultsSection.get(ctx, index);
     });
 }
 
@@ -224,40 +289,21 @@ NSUInteger RLMSectionedResultsFastEnumerate(NSFastEnumerationState *state,
     });
 }
 
-- (RLMFastEnumerator *)fastEnumerator {
-//    return translateRLMResultsErrors([&] {
-//        return [[RLMFastEnumerator alloc] initWithResults:*_results
-//                                               collection:self
-//                                                classInfo:*_info];
-//    });
+- (id<RLMValue>)key {
+    return translateRLMResultsErrors([&] {
+        return RLMMixedToObjc(_resultsSection.key());
+    });
 }
 
-
-NSUInteger RLMSectionResultsFastEnumerate(NSFastEnumerationState *state,
-                                            NSUInteger len,
-                                            id<RLMFastEnumerable> collection,
-                                            NSUInteger section_index) {
-    __autoreleasing RLMFastEnumerator *enumerator;
-    if (state->state == 0) {
-        enumerator = collection.fastEnumerator;
-        state->extra[0] = (long)enumerator;
-        state->extra[1] = collection.count;
-    }
-    else {
-        enumerator = (__bridge id)(void *)state->extra[0];
-    }
-
-    return [enumerator sectionCountByEnumeratingWithState:state count:len sectionIndex:section_index];
+- (RLMSectionedResultsEnumerator *)fastEnumerator {
+    return [[RLMSectionedResultsEnumerator alloc] initWithResultsSection:self];
 }
 
 - (NSUInteger)countByEnumeratingWithState:(NSFastEnumerationState *)state
                                   objects:(__unused __unsafe_unretained id [])buffer
                                     count:(NSUInteger)len {
-    if (!_info) {
-        return 0;
-    }
-
-//    return RLMSectionResultsFastEnumerate(state, len, self, _sectionIndex);
+    return RLMFastEnumerate(state, len, self);
 }
+
 
 @end

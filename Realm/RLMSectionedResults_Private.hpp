@@ -8,26 +8,46 @@
 #import "RLMSectionedResults.h"
 #import "RLMClassInfo.hpp"
 
-#import <realm/object-store/results.hpp>
-
 #ifndef Header_h
 #define Header_h
 
-typedef BOOL(^RLMSectionResultsComparionBlock)(id, id);
+@protocol RLMValue;
 
-@interface RLMSectionedResults () {
-    @public
-    realm::SectionedResults _sectionedResults;
-}
+namespace realm {
+class SectionedResults;
+class ResultsSection;
+};
+
+typedef id<RLMValue>(^RLMSectionResultsComparionBlock)(id);
+
+@interface RLMSectionedResultsEnumerator : NSObject
+
+@property (nonatomic, readonly) RLMSectionedResults *sectionedResults;
+@property (nonatomic, readonly) RLMSection *resultsSection;
+
+- (NSUInteger)countByEnumeratingWithState:(NSFastEnumerationState *)state
+                                    count:(NSUInteger)len;
+
+- (instancetype)initWithSectionedResults:(RLMSectionedResults *)sectionedResults;
+- (instancetype)initWithResultsSection:(RLMSection *)resultsSection;
+
+@end
+
+@interface RLMSectionedResults ()
 
 - (instancetype)initWithResults:(RLMResults *)results
                      objectInfo:(RLMClassInfo&)objectInfo
                 comparisonBlock:(RLMSectionResultsComparionBlock)comparisonBlock
-      sortedResultsUsingKeyPath:(NSString *)sortKeyPath
                       ascending:(BOOL)ascending
                         isSwift:(BOOL)isSwift;
 
 - (RLMRealm *)realm;
+
+- (RLMSectionedResultsEnumerator *)fastEnumerator;
+
+NSUInteger RLMFastEnumerate(NSFastEnumerationState *state,
+                            NSUInteger len,
+                            RLMSectionedResults *collection);
 
 @end
 
@@ -35,6 +55,12 @@ typedef BOOL(^RLMSectionResultsComparionBlock)(id, id);
 
 - (instancetype)initWithResultsSection:(realm::ResultsSection&&)resultsSection
                             objectInfo:(RLMClassInfo&)objectInfo;
+
+- (RLMSectionedResultsEnumerator *)fastEnumerator;
+
+NSUInteger RLMFastEnumerate(NSFastEnumerationState *state,
+                            NSUInteger len,
+                            RLMSection *collection);
 
 @end
 

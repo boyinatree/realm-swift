@@ -17,14 +17,15 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #import <Realm/RLMCollection.h>
+#import <Realm/RLMValue.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
 @class RLMObject;
 @class RLMSectionedResults<RLMObjectType>;
+@protocol RLMValue;
 
-typedef BOOL(^RLMSectionResultsComparionBlock)(id, id);
-
+typedef id<RLMValue>_Nonnull(^RLMSectionResultsComparionBlock)(id);
 
 /**
  `RLMResults` is an auto-updating container type in Realm returned from object
@@ -482,7 +483,6 @@ __attribute__((warn_unused_result));
  Sorts and sections this collection from a given property key path, returning the result
  as an instance of `RLMSectionedResults`.
 
- @param sortingKeyPath The key path to section by.
  @param ascending The direction to sort in.
  @param comparisonBlock The comparison function to use to compare two elements at a time.
                         A section begins when the two values being compared do not match.
@@ -490,9 +490,8 @@ __attribute__((warn_unused_result));
 
  @return An instance of RLMSectionedResults.
  */
-- (RLMSectionedResults<RLMObjectType> *)sectionedResultsSortedUsingKeyPath:(NSString *)sortingKeyPath
-                                                                 ascending:(BOOL)ascending
-                                                           comparisonBlock:(RLMSectionResultsComparionBlock)block;
+- (RLMSectionedResults<RLMObjectType> *)sectionedResultsSortedAscending:(BOOL)ascending
+                                                        comparisonBlock:(RLMSectionResultsComparionBlock)block;
 #pragma mark - Freeze
 
 /**
