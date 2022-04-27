@@ -1,24 +1,36 @@
+////////////////////////////////////////////////////////////////////////////
 //
-//  Header.h
-//  
+// Copyright 2016 Realm Inc.
 //
-//  Created by Lee Maguire on 04/02/2022.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+////////////////////////////////////////////////////////////////////////////
 
-#import "RLMSectionedResults.h"
 #import "RLMClassInfo.hpp"
+#import "RLMSectionedResults.h"
 
-#ifndef Header_h
-#define Header_h
+#import <realm/object-store/results.hpp>
+#import <realm/object-store/sectioned_results.hpp>
 
 @protocol RLMValue;
 
-namespace realm {
-class SectionedResults;
-class ResultsSection;
-};
+NS_ASSUME_NONNULL_BEGIN
 
-typedef id<RLMValue>(^RLMSectionResultsComparionBlock)(id);
+typedef id<RLMValue>_Nullable(^RLMSectionResultsComparionBlock)(id);
+
+@interface RLMSectionedResultsChange ()
+- (instancetype)initWithChanges:(realm::SectionedResultsChangeSet)indices;
+@end
 
 @interface RLMSectionedResultsEnumerator : NSObject
 
@@ -33,17 +45,19 @@ typedef id<RLMValue>(^RLMSectionResultsComparionBlock)(id);
 
 @end
 
-@interface RLMSectionedResults ()
+@interface RLMSectionedResults () {
+    @public
+    realm::SectionedResults _sectionedResults;
+}
 
 - (instancetype)initWithResults:(RLMResults *)results
                      objectInfo:(RLMClassInfo&)objectInfo
-                comparisonBlock:(RLMSectionResultsComparionBlock)comparisonBlock
-                      ascending:(BOOL)ascending
-                        isSwift:(BOOL)isSwift;
+                comparisonBlock:(RLMSectionResultsComparionBlock)comparisonBlock;
 
 - (RLMRealm *)realm;
 
 - (RLMSectionedResultsEnumerator *)fastEnumerator;
+- (RLMClassInfo *)objectInfo;
 
 NSUInteger RLMFastEnumerate(NSFastEnumerationState *state,
                             NSUInteger len,
@@ -64,4 +78,4 @@ NSUInteger RLMFastEnumerate(NSFastEnumerationState *state,
 
 @end
 
-#endif /* Header_h */
+NS_ASSUME_NONNULL_END

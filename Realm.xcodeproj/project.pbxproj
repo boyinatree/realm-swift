@@ -507,6 +507,7 @@
 		CF76F7FD24816AAB00890DD2 /* RLMFindOneAndModifyOptions.mm in Sources */ = {isa = PBXBuildFile; fileRef = CF76F7DB24816AAB00890DD2 /* RLMFindOneAndModifyOptions.mm */; };
 		CF76F7FE24816AAB00890DD2 /* RLMFindOneAndModifyOptions.mm in Sources */ = {isa = PBXBuildFile; fileRef = CF76F7DB24816AAB00890DD2 /* RLMFindOneAndModifyOptions.mm */; };
 		CF76F80224816B3800890DD2 /* MongoClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF76F80124816B3800890DD2 /* MongoClient.swift */; };
+		CF84D4F0281823B300005E27 /* SectionedResults.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF84D4EF281823B300005E27 /* SectionedResults.swift */; };
 		CF986D1E25AE3B090039D287 /* RLMSet_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = CF986D1A25AE3B080039D287 /* RLMSet_Private.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		CF986D1F25AE3B090039D287 /* RLMSet_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = CF986D1A25AE3B080039D287 /* RLMSet_Private.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		CF986D2025AE3B090039D287 /* RLMSet.mm in Sources */ = {isa = PBXBuildFile; fileRef = CF986D1B25AE3B080039D287 /* RLMSet.mm */; };
@@ -1078,6 +1079,7 @@
 		CF76F7DB24816AAB00890DD2 /* RLMFindOneAndModifyOptions.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = RLMFindOneAndModifyOptions.mm; sourceTree = "<group>"; };
 		CF76F7DC24816AAB00890DD2 /* RLMMongoDatabase_Private.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = RLMMongoDatabase_Private.hpp; sourceTree = "<group>"; };
 		CF76F80124816B3800890DD2 /* MongoClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MongoClient.swift; sourceTree = "<group>"; };
+		CF84D4EF281823B300005E27 /* SectionedResults.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SectionedResults.swift; sourceTree = "<group>"; };
 		CF986D1A25AE3B080039D287 /* RLMSet_Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RLMSet_Private.h; sourceTree = "<group>"; };
 		CF986D1B25AE3B080039D287 /* RLMSet.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = RLMSet.mm; sourceTree = "<group>"; };
 		CF986D1C25AE3B090039D287 /* RLMSet_Private.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = RLMSet_Private.hpp; sourceTree = "<group>"; };
@@ -1475,6 +1477,7 @@
 			children = (
 				3F48201C26307CE2005B40E8 /* Impl */,
 				5D660FE31BE98D670021E04F /* Aliases.swift */,
+				CF84D4EF281823B300005E27 /* SectionedResults.swift */,
 				681EE33A25EE8E1400A9DEC5 /* AnyRealmValue.swift */,
 				CFB43139243DF87100471C18 /* App.swift */,
 				4996EA9D2465BB8A003A1F51 /* BSON.swift */,
@@ -2835,6 +2838,7 @@
 				CFE9CE3326555BBD00BF96D6 /* RealmKeyedCollection.swift in Sources */,
 				CF44461E26121C6800BAFDB4 /* RealmProperty.swift in Sources */,
 				5D660FFB1BE98D670021E04F /* Results.swift in Sources */,
+				CF84D4F0281823B300005E27 /* SectionedResults.swift in Sources */,
 				68A7B91D2543538B00C703BC /* RLMSupport.swift in Sources */,
 				5D660FFC1BE98D670021E04F /* Schema.swift in Sources */,
 				3FE267DA264308680030F83C /* SchemaDiscovery.swift in Sources */,

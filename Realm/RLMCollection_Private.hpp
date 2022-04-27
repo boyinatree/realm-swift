@@ -98,10 +98,6 @@ NSUInteger RLMFastEnumerate(NSFastEnumerationState *state, NSUInteger len, id<RL
 - (instancetype)initWithChanges:(realm::CollectionChangeSet)indices;
 @end
 
-@interface RLMSectionedResultsChange ()
-- (instancetype)initWithChanges:(realm::SectionedResultsChangeSet)indices;
-@end
-
 @interface RLMCancellationToken : RLMNotificationToken {
 @public
     __unsafe_unretained RLMRealm *_realm;

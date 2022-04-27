@@ -41,15 +41,42 @@
     }];
 
     RLMResults<StringObject *> *results = [StringObject allObjectsInRealm:realm];
-    RLMSectionedResults<StringObject *> *sectionedResults = [results sectionedResultsSortedAscending:NO
-                                                                                     comparisonBlock:^id<RLMValue>(StringObject *o) {
-        return [o.stringCol substringToIndex:1];
-    }];
+
+
+
+    RLMSectionedResults<StringObject *> *sectionedResults =     [results sectionedResultsSortedUsingKeyPath:@"stringCol"
+                                                                                                  ascending:NO
+                                                                                            comparisonBlock:^id<RLMValue>(StringObject *o) {
+                                                                    return [o.stringCol substringToIndex:1];
+                                                                }];
 
     id token = [sectionedResults addNotificationBlock:^(RLMSectionedResults * _Nonnull r,
                                                         RLMSectionedResultsChange * _Nonnull c,
                                                         NSError * _Nonnull e) {
-        //...
+        NSLog(@"Insertions %@", c.insertions);
+        NSLog(@"Modiciations %@", c.modifications);
+        NSLog(@"Deletions %@", c.deletions);
+    }];
+
+    for (RLMSection *s in sectionedResults) {
+        NSLog(@"%@", s.key);
+        for (StringObject *o in s) {
+            NSLog(@"%@", o.stringCol);
+        }
+    }
+
+    [realm transactionWithBlock:^{
+        [realm deleteAllObjects];
+    }];
+
+    [realm transactionWithBlock:^{
+        [StringObject createInRealm:realm withValue:@[@"bar"]];
+        [StringObject createInRealm:realm withValue:@[@"hey"]];
+        [StringObject createInRealm:realm withValue:@[@"foop"]];
+        [StringObject createInRealm:realm withValue:@[@"h"]];
+        [StringObject createInRealm:realm withValue:@[@"foo"]];
+        [StringObject createInRealm:realm withValue:@[@"hello"]];
+        [StringObject createInRealm:realm withValue:@[@"bur"]];
     }];
 
     for (RLMSection *s in sectionedResults) {

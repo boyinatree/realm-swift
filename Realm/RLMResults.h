@@ -25,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class RLMSectionedResults<RLMObjectType>;
 @protocol RLMValue;
 
-typedef id<RLMValue>_Nonnull(^RLMSectionResultsComparionBlock)(id);
+typedef id<RLMValue> _Nonnull(^RLMSectionResultsComparionBlock)(id);
 
 /**
  `RLMResults` is an auto-updating container type in Realm returned from object
@@ -490,8 +490,9 @@ __attribute__((warn_unused_result));
 
  @return An instance of RLMSectionedResults.
  */
-- (RLMSectionedResults<RLMObjectType> *)sectionedResultsSortedAscending:(BOOL)ascending
-                                                        comparisonBlock:(RLMSectionResultsComparionBlock)block;
+- (RLMSectionedResults *)sectionedResultsSortedUsingKeyPath:(NSString *)keyPath
+                                                  ascending:(BOOL)ascending
+                                            comparisonBlock:(RLMSectionResultsComparionBlock)block;
 #pragma mark - Freeze
 
 /**

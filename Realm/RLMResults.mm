@@ -520,13 +520,12 @@ static inline void RLMResultsValidateInWriteTransaction(__unsafe_unretained RLMR
     return _realm.frozen;
 }
 
-- (RLMSectionedResults *)sectionedResultsSortedAscending:(BOOL)ascending
-                                         comparisonBlock:(RLMSectionResultsComparionBlock)block {
-    return [[RLMSectionedResults alloc] initWithResults:self
-                                             objectInfo:self.realm->_info[RLMStringDataToNSString(_results.get_object_type())]
-                                        comparisonBlock:block
-                                              ascending:ascending
-                                                isSwift:_info->isSwiftClass()];
+- (RLMSectionedResults *)sectionedResultsSortedUsingKeyPath:(NSString *)keyPath
+                                                  ascending:(BOOL)ascending
+                                            comparisonBlock:(RLMSectionResultsComparionBlock)block {
+    return [[RLMSectionedResults alloc] initWithResults:[self sortedResultsUsingKeyPath:keyPath ascending:ascending]
+                                             objectInfo:*_info
+                                        comparisonBlock:block];
 }
 
 - (instancetype)resolveInRealm:(RLMRealm *)realm {

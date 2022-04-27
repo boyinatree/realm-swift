@@ -466,48 +466,6 @@ static NSArray *toIndexPathArray(realm::IndexSet const& set, NSUInteger section)
 
 @end
 
-
-@implementation RLMSectionedResultsChange {
-//    realm::SectionedResultsChangeSet _indices;
-}
-
-//- (instancetype)initWithChanges:(realm::SectionedResultsChangeSet)indices {
-//    self = [super init];
-//    if (self) {
-//        _indices = std::move(indices);
-//    }
-//    return self;
-//}
-
-- (NSSet<NSIndexPath *> *)insertions {
-    RLMThrowResultsError(@"");
-//    return toArray(_indices.insertions);
-}
-
-- (NSIndexSet *)deletions {
-    RLMThrowResultsError(@"");
-}
-
-- (NSIndexSet *)modifications {
-    RLMThrowResultsError(@"");
-}
-
-- (NSString *)description {
-    return [NSString stringWithFormat:@"<RLMSectionedResultsChange: %p> insertions: %@, deletions: %@, modifications: %@",
-            (__bridge void *)self, self.insertions, self.deletions, self.modifications];
-}
-
-//- (NSSet<NSIndexPath *> *)toSet:(std::map<size_t, std::set<size_t>>)indicies {
-//    NSMutableSet<NSIndexPath *> *s = [NSMutableSet new];
-//    for (auto i : indicies) {
-//
-//    }
-//    return
-//}
-
-@end
-
-
 namespace {
 struct CollectionCallbackWrapper {
     void (^block)(id, RLMCollectionChange *, NSError *);

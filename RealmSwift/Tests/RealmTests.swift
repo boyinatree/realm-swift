@@ -1101,12 +1101,52 @@ class RealmTests: TestCase {
             o.intCol = 123
             realm.add(o)
         }
-        let foo = 123
-        let objs = realm.objects(ModernAllTypesObject.self).filter("stringCol == \(foo)")
-        print(objs)
+
+        var oo = ModernSwiftStringObject(value: ["ahead"])
 
         try! realm.write {
-            realm.add(ModernSwiftStringObject(value: ["ahead"]))
+            realm.add(oo)
+//            realm.add(ModernSwiftStringObject(value: ["aye"]))
+//            realm.add(ModernSwiftStringObject(value: [""]))
+            realm.add(ModernSwiftStringObject(value: ["coffee"]))
+            realm.add(ModernSwiftStringObject(value: ["bread"]))
+            realm.add(ModernSwiftStringObject(value: ["banana"]))
+//            realm.add(ModernSwiftStringObject(value: ["apple"]))
+        }
+
+
+        let sectionedResults = realm.objects(ModernSwiftStringObject.self)
+            .sectioned(by: \.stringCol.first, ascending: true)
+
+
+        let sectionedResults2 = realm.objects(ModernSwiftStringObject.self)
+            .sectioned(by: \.stringCol, ascending: true)
+
+        for section in sectionedResults2 {
+            print("Key: \(section.key)")
+            for obj in section {
+                print(obj.stringCol)
+            }
+        }
+
+        let sectionedResults3 = realm.objects(ModernAllTypesObject.self)
+            .sectioned(by: \.intCol, ascending: true)
+
+        for section in sectionedResults3 {
+            print("Key: \(section.key)")
+            for obj in section {
+                print(obj.stringCol)
+            }
+        }
+
+        for section in sectionedResults {
+            print(section.key)
+            for obj in section {
+                print(obj.stringCol)
+            }
+        }
+
+        try! realm.write {
             realm.add(ModernSwiftStringObject(value: ["aye"]))
             realm.add(ModernSwiftStringObject(value: [""]))
             realm.add(ModernSwiftStringObject(value: ["coffee"]))
@@ -1115,38 +1155,29 @@ class RealmTests: TestCase {
             realm.add(ModernSwiftStringObject(value: ["apple"]))
         }
 
+        for section in sectionedResults {
+            print(section.key)
+            for obj in section {
+                print(obj.stringCol)
+            }
+        }
 
-//        let sectionedResults = realm.objects(ModernSwiftStringObject.self)
-//            .sectioned(by: \.stringCol.first, ascending: true)
-//
-//        var someIndex = IndexPath(item: 0, section: 0)
-//        let element = sectionedResults[indexPath: someIndex]
-//
-//        for i in 0..<sectionedResults.count {
-//            let section = sectionedResults[i]
-//            print(section.key)
-//            for y in 0..<section.count {
-//                print(section[y])
-//            }
-//        }
+        print(sectionedResults)
 
-//        let token = sectionedResults.observe { (changes: RealmSectionedResultsChange) in
-//            switch changes {
-//            case .initial(let collection):
-//                break
-//            case .update:
-//                break
-//            case .error:
-//                break
-//            }
-//        }
+        try! realm.write {
+            realm.delete(oo)
+        }
+
+        for section in sectionedResults {
+            print(section.key)
+            for obj in section {
+                print(obj.stringCol)
+            }
+        }
+
+        print(sectionedResults)
+
     }
-
-
-
-    // check core data
-    // check swiftui
-    // check uitableview
 
     /*
      struct B: View {

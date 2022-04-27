@@ -11,8 +11,8 @@
 #import "RLMCollection_Private.hpp"
 #import "RLMAccessor.hpp"
 #import "RLMRealm_Private.hpp"
-
-#import <realm/object-store/sectioned_results.hpp>
+#import "RLMObservation.hpp"
+#import "RLMThreadSafeReference_Private.hpp"
 
 #include <map>
 #include <set>
@@ -21,7 +21,7 @@ namespace {
 struct CollectionCallbackWrapper {
     void (^block)(id, RLMSectionedResultsChange *, NSError *);
     id collection;
-    bool ignoreChangesInInitialNotification;
+    bool ignoreChangesInInitialNotification = true;
 
     void operator()(realm::SectionedResultsChangeSet const& changes, std::exception_ptr err) {
         if (err) {
@@ -30,7 +30,7 @@ struct CollectionCallbackWrapper {
             }
             catch (...) {
                 NSError *error = nil;
-//                RLMRealmTranslateException(&error);
+                RLMRealmTranslateException(&error);
                 block(nil, nil, error);
                 return;
             }
@@ -41,28 +41,115 @@ struct CollectionCallbackWrapper {
             block(collection, nil, nil);
         }
 
-//        block(collection, [[RLMSectionedResultsChange alloc] initWithChanges:changes], nil);
+        block(collection, [[RLMSectionedResultsChange alloc] initWithChanges:changes], nil);
 
     }
 };
 } // anonymous namespace
+
+realm::SectionedResults& RLMGetBackingCollection(RLMSectionedResults *self) {
+    return self->_sectionedResults;
+}
 
 RLMNotificationToken *RLMAddNotificationBlock(RLMSectionedResults *collection,
                                               void (^block)(id, RLMSectionedResultsChange *, NSError *),
                                               NSArray<NSString *> *keyPaths,
                                               dispatch_queue_t queue) {
     RLMRealm *realm = collection.realm;
+    if (!realm) {
+        @throw RLMException(@"Linking objects notifications are only supported on managed objects.");
+    }
     auto token = [[RLMCancellationToken alloc] init];
-    realm::KeyPathArray keyPathArray;
+
+    RLMClassInfo *info = collection.objectInfo;
+    realm::KeyPathArray keyPathArray = RLMKeyPathArrayFromStringArray(realm, info, keyPaths);
 
     if (!queue) {
+        [realm verifyNotificationsAreSupported:true];
         token->_realm = realm;
-//        token->_token = collection->_sectionedResults.add_notification_callback({CollectionCallbackWrapper{block, collection, false}, collection->_sectionedResults}, std::move(keyPathArray));
+        token->_token = RLMGetBackingCollection(collection).add_notification_callback(CollectionCallbackWrapper{block, collection}, std::move(keyPathArray));
         return token;
     }
 
+    RLMThreadSafeReference *tsr = [RLMThreadSafeReference referenceWithThreadConfined:collection];
+    token->_realm = realm;
+    RLMRealmConfiguration *config = realm.configuration;
+    dispatch_async(queue, ^{
+        std::lock_guard<std::mutex> lock(token->_mutex);
+        if (!token->_realm) {
+            return;
+        }
+        NSError *error;
+        RLMRealm *realm = token->_realm = [RLMRealm realmWithConfiguration:config queue:queue error:&error];
+        if (!realm) {
+            block(nil, nil, error);
+            return;
+        }
+        RLMSectionedResults *collection = [realm resolveThreadSafeReference:tsr];
+        token->_token = RLMGetBackingCollection(collection).add_notification_callback(CollectionCallbackWrapper{block, collection}, std::move(keyPathArray));
+    });
     return token;
 }
+
+@implementation RLMSectionedResultsChange {
+    realm::SectionedResultsChangeSet _indices;
+}
+
+- (instancetype)initWithChanges:(realm::SectionedResultsChangeSet)indices {
+    self = [super init];
+    if (self) {
+        _indices = std::move(indices);
+    }
+    return self;
+}
+
+- (NSDictionary<NSNumber *, NSArray<NSIndexPath *> *> *)indexesFromIndexMap:(std::map<size_t, std::vector<size_t>>&)indexMap {
+    NSMutableDictionary<NSNumber *, NSArray<NSIndexPath *> *> *d = [NSMutableDictionary dictionaryWithCapacity:indexMap.size()];
+    for (auto& kv : indexMap) {
+        NSMutableArray<NSIndexPath *> *a = [NSMutableArray arrayWithCapacity:kv.second.size()];
+        for(auto& idx : kv.second) {
+            [a addObject:[[NSIndexPath alloc] initWithIndex:idx]];
+        }
+        d[@(kv.first)] = a;
+    }
+    return d;
+}
+
+
+- (NSDictionary<NSNumber *, NSArray<NSIndexPath *> *> *)insertions {
+    return [self indexesFromIndexMap:_indices.insertions];
+}
+
+- (NSDictionary<NSNumber *, NSArray<NSIndexPath *> *> *)deletions {
+    return [self indexesFromIndexMap:_indices.deletions];
+}
+
+- (NSDictionary<NSNumber *, NSArray<NSIndexPath *> *> *)modifications {
+    return [self indexesFromIndexMap:_indices.modifications];
+}
+
+/// Returns the index paths of the deletion indices in the given section.
+- (NSArray<NSIndexPath *> *)deletionsInSection:(NSUInteger)section {
+    return self.deletions[@(section)];
+}
+
+/// Returns the index paths of the insertion indices in the given section.
+- (NSArray<NSIndexPath *> *)insertionsInSection:(NSUInteger)section {
+    return self.insertions[@(section)];
+}
+
+/// Returns the index paths of the modification indices in the given section.
+- (NSArray<NSIndexPath *> *)modificationsInSection:(NSUInteger)section {
+    return self.modifications[@(section)];
+
+}
+
+- (NSString *)description {
+    return [NSString stringWithFormat:@"<RLMSectionedResultsChange: %p> insertions: %@, deletions: %@, modifications: %@",
+            (__bridge void *)self, self.insertions, self.deletions, self.modifications];
+}
+
+@end
 
 struct SectionedResultsComparison {
     RLMClassInfo *_info;
@@ -70,7 +157,8 @@ struct SectionedResultsComparison {
 
     realm::Mixed operator()(realm::Mixed first, realm::SharedRealm) {
         RLMAccessorContext context(*_info);
-        return context.unbox<realm::Mixed>(_comparisonBlock(context.box(first)));
+        id value = _comparisonBlock(context.box(first));
+        return context.unbox<realm::Mixed>(value);
     }
 };
 
@@ -179,20 +267,15 @@ NSUInteger RLMFastEnumerate(NSFastEnumerationState *state,
 @implementation RLMSectionedResults {
     RLMRealm *_realm;
     RLMClassInfo *_info;
-    RLMResults *_rlmResults;
-    realm::SectionedResults _sectionedResults;
 }
 
 - (instancetype)initWithResults:(RLMResults *)results
                      objectInfo:(RLMClassInfo&)objectInfo
-                comparisonBlock:(RLMSectionResultsComparionBlock)comparisonBlock
-                      ascending:(BOOL)ascending
-                        isSwift:(BOOL)isSwift {
+                comparisonBlock:(RLMSectionResultsComparionBlock)comparisonBlock {
     if (self = [super init]) {
         _info = &objectInfo;
-        _rlmResults = results;
         _realm = results.realm;
-        _sectionedResults = _rlmResults->_results.sectioned_results(SectionedResultsComparison {_info, comparisonBlock});
+        _sectionedResults = results->_results.sectioned_results(SectionedResultsComparison {_info, comparisonBlock});
     }
     return self;
 }
@@ -249,6 +332,34 @@ NSUInteger RLMFastEnumerate(NSFastEnumerationState *state,
     return RLMAddNotificationBlock(self, block, keyPaths, queue);
 }
 #pragma clang diagnostic pop
+
+- (RLMClassInfo *)objectInfo {
+    return _info;
+}
+
+#pragma mark - Thread Confined Protocol Conformance
+
+- (realm::ThreadSafeReference)makeThreadSafeReference {
+    return _sectionedResults.thread_safe_reference();
+}
+
+- (id)objectiveCMetadata {
+    return nil;
+}
+
+- (instancetype)initFromThreadSafeReference:(realm::SectionedResults&&)reference {
+    if (self = [super init]) {
+//        _sectionedResults = std::move(reference);
+    }
+    return self;
+}
+
++ (instancetype)objectWithThreadSafeReference:(realm::ThreadSafeReference)reference
+                                     metadata:(__unused id)metadata
+                                        realm:(RLMRealm *)realm {
+    auto results = reference.resolve<realm::Results>(realm->_realm);
+//    return [[RLMSectionedResults alloc] initFromThreadSafeReference:std::move(sectionedResults)];
+}
 
 @end
 

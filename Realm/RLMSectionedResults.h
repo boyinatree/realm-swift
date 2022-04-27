@@ -23,6 +23,21 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol RLMValue;
 @class RLMResults<RLMObjectType>;
 
+@interface RLMSectionedResultsChange : NSObject
+@property (nonatomic, readonly) NSDictionary<NSNumber *, NSArray<NSIndexPath *> *> *deletions;
+@property (nonatomic, readonly) NSDictionary<NSNumber *, NSArray<NSIndexPath *> *> *insertions;
+@property (nonatomic, readonly) NSDictionary<NSNumber *, NSArray<NSIndexPath *> *> *modifications;
+
+/// Returns the index paths of the deletion indices in the given section.
+- (NSArray<NSIndexPath *> *)deletionsInSection:(NSUInteger)section;
+
+/// Returns the index paths of the insertion indices in the given section.
+- (NSArray<NSIndexPath *> *)insertionsInSection:(NSUInteger)section;
+
+/// Returns the index paths of the modification indices in the given section.
+- (NSArray<NSIndexPath *> *)modificationsInSection:(NSUInteger)section;
+@end
+
 @interface RLMSection<RLMObjectType> : NSObject<NSFastEnumeration>
 /// An array containing all objects in the section.
 @property (nonatomic, strong) NSArray<RLMObjectType> *values;
@@ -37,7 +52,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface RLMSectionedResults<RLMObjectType> : NSObject<NSFastEnumeration>
+@interface RLMSectionedResults<RLMObjectType> : NSObject<NSFastEnumeration, RLMThreadConfined>
 /// The total amount of sections in this collection.
 @property (nonatomic, readonly, assign) NSUInteger count;
 /// Returns the section at a given index.
