@@ -39,8 +39,6 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface RLMSection<RLMObjectType> : NSObject<NSFastEnumeration>
-/// An array containing all objects in the section.
-@property (nonatomic, strong) NSArray<RLMObjectType> *values;
 /// The count of objects in this section.
 @property (nonatomic, readonly, assign) NSUInteger count;
 
@@ -68,6 +66,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (RLMNotificationToken *)addNotificationBlock:(void (^)(RLMSectionedResults *, RLMSectionedResultsChange *, NSError *))block
                                       keyPaths:(NSArray<NSString *> *)keyPaths
                                          queue:(dispatch_queue_t)queue;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -25,7 +25,7 @@ NS_ASSUME_NONNULL_BEGIN
 @class RLMSectionedResults<RLMObjectType>;
 @protocol RLMValue;
 
-typedef id<RLMValue> _Nonnull(^RLMSectionResultsComparionBlock)(id);
+typedef id<RLMValue> _Nonnull(^RLMSectionedResultsKeyBlock)(id);
 
 /**
  `RLMResults` is an auto-updating container type in Realm returned from object
@@ -483,16 +483,16 @@ __attribute__((warn_unused_result));
  Sorts and sections this collection from a given property key path, returning the result
  as an instance of `RLMSectionedResults`.
 
+ @param keyPath The property key path to sort on.
  @param ascending The direction to sort in.
- @param comparisonBlock The comparison function to use to compare two elements at a time.
-                        A section begins when the two values being compared do not match.
-                        The two values being compared will be of the type of the property being sectioned on.
+ @param keyBlock A callback which is invoked on each element in the Results collection.
+                This callback is to return the section key for the element in the collection.
 
  @return An instance of RLMSectionedResults.
  */
 - (RLMSectionedResults *)sectionedResultsSortedUsingKeyPath:(NSString *)keyPath
                                                   ascending:(BOOL)ascending
-                                            comparisonBlock:(RLMSectionResultsComparionBlock)block;
+                                                   keyBlock:(RLMSectionedResultsKeyBlock)keyBlock;
 #pragma mark - Freeze
 
 /**

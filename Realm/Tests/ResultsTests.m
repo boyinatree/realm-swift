@@ -46,7 +46,7 @@
 
     RLMSectionedResults<StringObject *> *sectionedResults =     [results sectionedResultsSortedUsingKeyPath:@"stringCol"
                                                                                                   ascending:NO
-                                                                                            comparisonBlock:^id<RLMValue>(StringObject *o) {
+                                                                                            keyBlock:^id<RLMValue>(StringObject *o) {
                                                                     return [o.stringCol substringToIndex:1];
                                                                 }];
 

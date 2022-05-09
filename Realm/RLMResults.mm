@@ -522,10 +522,10 @@ static inline void RLMResultsValidateInWriteTransaction(__unsafe_unretained RLMR
 
 - (RLMSectionedResults *)sectionedResultsSortedUsingKeyPath:(NSString *)keyPath
                                                   ascending:(BOOL)ascending
-                                            comparisonBlock:(RLMSectionResultsComparionBlock)block {
+                                                   keyBlock:(RLMSectionedResultsKeyBlock)keyBlock {
     return [[RLMSectionedResults alloc] initWithResults:[self sortedResultsUsingKeyPath:keyPath ascending:ascending]
                                              objectInfo:*_info
-                                        comparisonBlock:block];
+                                               keyBlock:keyBlock];
 }
 
 - (instancetype)resolveInRealm:(RLMRealm *)realm {

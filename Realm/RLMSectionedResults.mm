@@ -1,21 +1,32 @@
+////////////////////////////////////////////////////////////////////////////
 //
-//  RLMSectionedResults.m
-//  
+// Copyright 2022 Realm Inc.
 //
-//  Created by Lee Maguire on 03/02/2022.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+////////////////////////////////////////////////////////////////////////////
 
 #import "RLMSectionedResults_Private.hpp"
+#import "RLMAccessor.hpp"
+#import "RLMCollection_Private.hpp"
+#import "RLMObjectSchema_Private.hpp"
+#import "RLMObservation.hpp"
+#import "RLMRealm_Private.hpp"
 #import "RLMResults.h"
 #import "RLMResults_Private.hpp"
-#import "RLMCollection_Private.hpp"
-#import "RLMAccessor.hpp"
-#import "RLMRealm_Private.hpp"
-#import "RLMObservation.hpp"
 #import "RLMThreadSafeReference_Private.hpp"
 
 #include <map>
-#include <set>
 
 namespace {
 struct CollectionCallbackWrapper {
@@ -42,7 +53,6 @@ struct CollectionCallbackWrapper {
         }
 
         block(collection, [[RLMSectionedResultsChange alloc] initWithChanges:changes], nil);
-
     }
 };
 } // anonymous namespace
@@ -151,13 +161,13 @@ RLMNotificationToken *RLMAddNotificationBlock(RLMSectionedResults *collection,
 
 @end
 
-struct SectionedResultsComparison {
+struct SectionedResultsKeyProjection {
     RLMClassInfo *_info;
-    RLMSectionResultsComparionBlock _comparisonBlock;
+    RLMSectionedResultsKeyBlock _block;
 
     realm::Mixed operator()(realm::Mixed first, realm::SharedRealm) {
         RLMAccessorContext context(*_info);
-        id value = _comparisonBlock(context.box(first));
+        id value = _block(context.box(first));
         return context.unbox<realm::Mixed>(value);
     }
 };
@@ -176,7 +186,7 @@ struct SectionedResultsComparison {
 
 - (instancetype)initWithSectionedResults:(RLMSectionedResults *)sectionedResults {
     if (self = [super init]) {
-        _sectionedResults = sectionedResults;
+        _sectionedResults = [sectionedResults snapshot];
         _isSection = NO;
         return self;
     }
@@ -218,7 +228,6 @@ struct SectionedResultsComparison {
             _sectionedResults = nil;
         }
     }
-
 
     state->itemsPtr = (__unsafe_unretained id *)(void *)_strongBuffer;
     state->state += batchCount;
@@ -271,11 +280,11 @@ NSUInteger RLMFastEnumerate(NSFastEnumerationState *state,
 
 - (instancetype)initWithResults:(RLMResults *)results
                      objectInfo:(RLMClassInfo&)objectInfo
-                comparisonBlock:(RLMSectionResultsComparionBlock)comparisonBlock {
+                       keyBlock:(RLMSectionedResultsKeyBlock)keyBlock {
     if (self = [super init]) {
         _info = &objectInfo;
         _realm = results.realm;
-        _sectionedResults = results->_results.sectioned_results(SectionedResultsComparison {_info, comparisonBlock});
+        _sectionedResults = results->_results.sectioned_results(SectionedResultsKeyProjection {_info, keyBlock});
     }
     return self;
 }
@@ -361,6 +370,46 @@ NSUInteger RLMFastEnumerate(NSFastEnumerationState *state,
 //    return [[RLMSectionedResults alloc] initFromThreadSafeReference:std::move(sectionedResults)];
 }
 
+- (NSString *)description {
+    NSString *objType = @"";
+    if (_info) {
+        objType = [NSString stringWithFormat:@"<%@>", _info->rlmObjectSchema.className];
+    }
+    const NSUInteger maxObjects = 100;
+    auto str = [NSMutableString stringWithFormat:@"RLMSectionedResults%@ <%p> (\n", objType, (void *)self];
+    size_t index = 0, skipped = 0;
+    for (RLMSection *section in self) {
+        NSString *sub = [section description];
+        // Indent child objects
+        NSString *objDescription = [sub stringByReplacingOccurrencesOfString:@"\n"
+                                                                  withString:@"\n\t"];
+        [str appendFormat:@"\t[%@] %@,\n", section.key, objDescription];
+        index++;
+        if (index >= maxObjects) {
+            skipped = self.count - maxObjects;
+            break;
+        }
+    }
+
+    // Remove last comma and newline characters
+    if (self.count > 0) {
+        [str deleteCharactersInRange:NSMakeRange(str.length-2, 2)];
+    }
+    if (skipped) {
+        [str appendFormat:@"\n\t... %zu objects skipped.", skipped];
+    }
+    [str appendFormat:@"\n)"];
+    return str;
+}
+
+- (RLMSectionedResults *)snapshot {
+    RLMSectionedResults *sr = [RLMSectionedResults new];
+    sr->_sectionedResults = _sectionedResults.snapshot();
+    sr->_info = _info;
+    sr->_realm = _realm;
+    return sr;
+}
+
 @end
 
 @interface RLMSection ()
@@ -370,6 +419,33 @@ NSUInteger RLMFastEnumerate(NSFastEnumerationState *state,
     RLMRealm *_realm;
     RLMClassInfo *_info;
     realm::ResultsSection _resultsSection;
+}
+
+- (NSString *)description {
+    const NSUInteger maxObjects = 100;
+    auto str = [NSMutableString stringWithFormat:@"RLMSection <%p> (\n", (void *)self];
+    size_t index = 0, skipped = 0;
+    for (id obj in self) {
+        NSString *sub = [obj description];
+        // Indent child objects
+        NSString *objDescription = [sub stringByReplacingOccurrencesOfString:@"\n"
+                                                                  withString:@"\n\t"];
+        [str appendFormat:@"\t[%zu] %@,\n", index++, objDescription];
+        if (index >= maxObjects) {
+            skipped = self.count - maxObjects;
+            break;
+        }
+    }
+
+    // Remove last comma and newline characters
+    if (self.count > 0) {
+        [str deleteCharactersInRange:NSMakeRange(str.length-2, 2)];
+    }
+    if (skipped) {
+        [str appendFormat:@"\n\t... %zu objects skipped.", skipped];
+    }
+    [str appendFormat:@"\n)"];
+    return str;
 }
 
 - (instancetype)initWithResultsSection:(realm::ResultsSection&&)resultsSection

@@ -26,7 +26,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef id<RLMValue>_Nullable(^RLMSectionResultsComparionBlock)(id);
+typedef id<RLMValue>_Nullable(^RLMSectionedResultsKeyBlock)(id);
 
 @interface RLMSectionedResultsChange ()
 - (instancetype)initWithChanges:(realm::SectionedResultsChangeSet)indices;
@@ -52,12 +52,13 @@ typedef id<RLMValue>_Nullable(^RLMSectionResultsComparionBlock)(id);
 
 - (instancetype)initWithResults:(RLMResults *)results
                      objectInfo:(RLMClassInfo&)objectInfo
-                comparisonBlock:(RLMSectionResultsComparionBlock)comparisonBlock;
+                      keyBlock:(RLMSectionedResultsKeyBlock)keyBlock;
 
 - (RLMRealm *)realm;
 
 - (RLMSectionedResultsEnumerator *)fastEnumerator;
 - (RLMClassInfo *)objectInfo;
+- (RLMSectionedResults *)snapshot;
 
 NSUInteger RLMFastEnumerate(NSFastEnumerationState *state,
                             NSUInteger len,

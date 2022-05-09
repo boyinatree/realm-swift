@@ -90,7 +90,7 @@ struct AfterClientResetWrapper {
     bool dynamic;
     std::string path;
     RLMSchema *customSchema;
-    void operator()(std::shared_ptr<Realm> local, std::shared_ptr<Realm> remote) {
+    void operator()(std::shared_ptr<Realm> local, std::shared_ptr<Realm> remote, bool did_recover) {
         @autoreleasepool {
             RLMSchema *schema;
             if (dynamic) {
@@ -195,7 +195,7 @@ struct AfterClientResetWrapper {
     } else if (self.clientResetMode == RLMClientResetModeManual) {
         @throw RLMException(@"Client reset notifications not supported in Manual mode. Use SyncManager.ErrorHandler");
     } else {
-        _config->notify_after_client_reset = AfterClientResetWrapper{afterClientReset};
+//        _config->notify_after_client_reset = AfterClientResetWrapper{afterClientReset};
     }
 }
 
